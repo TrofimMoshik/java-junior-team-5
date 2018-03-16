@@ -9,9 +9,13 @@ import java.util.Queue;
 /**
  * Created by Trofim Moshik on 15.03.2018.
  */
-class ServerAcceptor {
+public class ServerAcceptor {
     // Синхронизированное множество подключений клиентов. Одновременно имеет доступ только один тред.
-    static volatile Queue<Connection> clients;
+    private static volatile Queue<Connection> clients;
+
+    public static Queue<Connection> getClients() {
+        return clients;
+    }
 
     void execute() {
         clients = new LinkedList<>();
@@ -23,12 +27,19 @@ class ServerAcceptor {
                 Socket socket = server.accept();
 
                 //Выделение, добавление в сет и запуск нового треда для вновь подключенного клиента
-                Connection connection = new Connection(socket);
+                Connection connection = null;
+                try {
+                    connection = new Connection(socket);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
 
-                Thread clientThread = new Thread(connection);
-                clientThread.start();
-                synchronized (clients) {
-                    clients.add(connection);
+                if (connection != null) {
+                    Thread clientThread = new Thread(connection);
+                    clientThread.start();
+                    synchronized (clients) {
+                        clients.add(connection);
+                    }
                 }
             }
         } catch (IOException e) {
@@ -37,15 +48,18 @@ class ServerAcceptor {
 
             //Синхронизированное закрытие всех клиентских соединений
             //Доступ обеспечен только для одного треда одновременно
-            try {
-                synchronized (clients) {
-                    for (Connection client : clients) {
-                        client.close();
+            while (!clients.isEmpty()) {
+                try {
+                    synchronized (clients) {
+                        for (Connection client : clients) {
+                            client.close();
+                            clients.remove(client);
+                        }
                     }
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
-            } catch (Exception e) {
-                e.printStackTrace();
-                }
+            }
             }
         }
     }
