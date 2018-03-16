@@ -16,6 +16,11 @@ public class Connection implements Runnable {
 
     Connection(Socket socket) {
         this.socket = socket;
+    }
+
+    @Override
+    public void run() {
+        MessageDecorator md = new MessageDecorator();
 
         try {
 
@@ -28,12 +33,6 @@ public class Connection implements Runnable {
             close();
 
         }
-
-    }
-
-    @Override
-    public void run() {
-        MessageDecorator md = new MessageDecorator();
 
         try {
 
