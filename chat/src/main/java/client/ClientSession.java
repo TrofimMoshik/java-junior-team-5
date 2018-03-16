@@ -46,7 +46,7 @@ public class ClientSession implements Runnable{
                 System.out.println(s);
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            System.out.println("Сервер упал!");
         }
     }
 
@@ -72,6 +72,11 @@ public class ClientSession implements Runnable{
             while (!"exit".equals(s)) {
                 s = scanner.nextLine();
 
+                if (s.length() > 150) {
+                    s = "";
+                    System.out.println("This is too big string! Try again");
+                }
+
                 if (s.contains("/snd")) {
                     out.println(s.substring(4,s.length()));
                 } else  if (s.contains("/hist")) {
@@ -84,8 +89,9 @@ public class ClientSession implements Runnable{
 
             //Прерываем вывод входящих сообщений в консоль
             thread.interrupt();
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            System.out.println("Сервер упал!");
+
         } finally {
             close();
         }

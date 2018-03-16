@@ -16,19 +16,20 @@ class ServerAcceptor {
     void execute() {
         clients = new LinkedList<>();
 
-        try (ServerSocket server = new ServerSocket(6000)){
+        try (ServerSocket server = new ServerSocket(6000)) {
+            //Ожидание сервером подключения
 
             while (true) {
-                //Ожидание сервером подключения
                 Socket socket = server.accept();
 
                 //Выделение, добавление в сет и запуск нового треда для вновь подключенного клиента
-                Connection acceptor = new Connection(socket);
-                synchronized (clients) {
-                    clients.add(acceptor);
-                }
-                Thread clientThread = new Thread(acceptor);
+                Connection connection = new Connection(socket);
+
+                Thread clientThread = new Thread(connection);
                 clientThread.start();
+                synchronized (clients) {
+                    clients.add(connection);
+                }
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -44,7 +45,7 @@ class ServerAcceptor {
                 }
             } catch (Exception e) {
                 e.printStackTrace();
+                }
             }
         }
     }
-}

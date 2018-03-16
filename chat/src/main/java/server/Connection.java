@@ -54,6 +54,7 @@ public class Connection implements Runnable {
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
+            ServerAcceptor.clients.remove(this);
             close();
         }
     }
