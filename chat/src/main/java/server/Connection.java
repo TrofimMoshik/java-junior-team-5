@@ -42,18 +42,17 @@ public class Connection implements Runnable {
                 income = in.readLine();
                 if ("exit".equals(income)) break;
                 afterDecorating = md.decorate(income);
-                md.history();
-                synchronized (ServerAcceptor.clients) {
-                    for (Connection client : ServerAcceptor.clients) {
+                synchronized (ServerAcceptor.getClients()) {
+                    for (Connection client : ServerAcceptor.getClients()) {
                         client.out.println(afterDecorating);
                     }
                 }
+                md.history();
             }
 
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
-            ServerAcceptor.clients.remove(this);
             close();
         }
     }

@@ -9,9 +9,13 @@ import java.util.Queue;
 /**
  * Created by Trofim Moshik on 15.03.2018.
  */
-class ServerAcceptor {
+public class ServerAcceptor {
     // Синхронизированное множество подключений клиентов. Одновременно имеет доступ только один тред.
-    static volatile Queue<Connection> clients;
+    private static volatile Queue<Connection> clients;
+
+    public static Queue<Connection> getClients() {
+        return clients;
+    }
 
     void execute() {
         clients = new LinkedList<>();
