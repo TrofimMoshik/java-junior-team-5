@@ -3,19 +3,18 @@ package server;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.LinkedList;
+import java.util.Queue;
 
 /**
  * Created by Trofim Moshik on 15.03.2018.
  */
 class ServerAcceptor {
     // Синхронизированное множество подключений клиентов. Одновременно имеет доступ только один тред.
-    static Set<Connection> clients;
+    static volatile Queue<Connection> clients;
 
-    ServerAcceptor() {
-        clients = Collections.synchronizedSet(new HashSet<>());
+    void execute() {
+        clients = new LinkedList<>();
 
         try (ServerSocket server = new ServerSocket(6000)){
 
@@ -25,7 +24,9 @@ class ServerAcceptor {
 
                 //Выделение, добавление в сет и запуск нового треда для вновь подключенного клиента
                 Connection acceptor = new Connection(socket);
-                clients.add(acceptor);
+                synchronized (clients) {
+                    clients.add(acceptor);
+                }
                 Thread clientThread = new Thread(acceptor);
                 clientThread.start();
             }

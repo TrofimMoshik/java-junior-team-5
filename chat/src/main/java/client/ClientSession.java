@@ -5,6 +5,9 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Scanner;
 
 /**
@@ -12,46 +15,10 @@ import java.util.Scanner;
  *
  * Обеспечение работы клиента
  */
-public class ClientSession /*implements Runnable*/{
+public class ClientSession implements Runnable{
     private BufferedReader in;
     private PrintWriter out;
     private Socket socket;
-
-    /**
-     * Организация обмена сообщениями с сервером
-     */
-    ClientSession() {
-
-        try {
-
-            //Подключаемся к серверу и получаем потоки in и out для передачи сообщений
-            socket = new Socket("localhost", 6000);
-            in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            out = new PrintWriter(socket.getOutputStream(), true);
-
-
-            //Запускаем вывод всех входящих сообщений в консоль
-            Resender resender = new Resender(in);
-            Thread thread = new Thread(resender);
-            thread.start();
-
-            //Пока пользователь не введет "exit" отправляем на сервер все, что введено из консоли
-            Scanner scanner = new Scanner(System.in);
-            String s = "";
-            while (!"exit".equals(s)) {
-                s = scanner.nextLine();
-                out.println(s);
-            }
-
-            //Прерываем вывод входящих сообщений в консоль
-//            thread.interrupt();
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            close();
-        }
-    }
 
     /**
      * Закрытие выходного, входного потоков и сокета
@@ -71,18 +38,56 @@ public class ClientSession /*implements Runnable*/{
     /**
      * Прием сообщений от сервера и вывод их в консоль
      */
-//    @Override
-//    public void run() {
-//        try {
-//
-//            while (!Thread.interrupted()) {
-//                String s = in.readLine();
-//                System.out.println(s);
-//            }
-//
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
-//    }
+    @Override
+    public void run() {
+        try {
+            while (!Thread.interrupted()) {
+                String s = in.readLine();
+                System.out.println(s);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
+    /**
+     * Организация обмена сообщениями с сервером
+     */
+    void execute() {
+        try {
+
+            //Подключаемся к серверу и получаем потоки in и out для передачи сообщений
+            socket = new Socket("localhost", 6000);
+            in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            out = new PrintWriter(socket.getOutputStream(), true);
+
+            //Запускаем вывод всех входящих сообщений в консоль
+            Thread thread = new Thread(this);
+            thread.start();
+
+            //Пока пользователь не введет "exit" отправляем на сервер все, что введено из консоли
+            System.out.println("Welcome to our chat, man!");
+            Scanner scanner = new Scanner(System.in);
+            String s = "";
+            while (!"exit".equals(s)) {
+                s = scanner.nextLine();
+
+                if (s.contains("/snd")) {
+                    out.println(s.substring(4,s.length()));
+                } else  if (s.contains("/hist")) {
+                    Files.lines(Paths.get("C:\\Users\\pp183\\Desktop\\temp\\java-junior-team-5\\chat\\src\\main\\resources\\history.txt"),
+                            StandardCharsets.UTF_8).forEach(System.out::println);
+                } else {
+                    System.out.println("You entered wrong command! Use \"/snd\"!");
+                }
+            }
+
+            //Прерываем вывод входящих сообщений в консоль
+            thread.interrupt();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            close();
+        }
+    }
 }
